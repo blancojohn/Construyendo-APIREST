@@ -23,7 +23,7 @@ CORS(app)
 def main():
     return jsonify({ "status": "App Running Successfully!"}), 200
 
-app.register_blueprint(api, url_prefix='/api')
+app.register_blueprint(api, url_prefix='/api') #Víncula el archivo routes.py con el archivo app.py
 
 if __name__ == '__main__': #condiciona si name es el archivo principal inicia app
     app.run()
