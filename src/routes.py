@@ -51,14 +51,15 @@ def add_favorite_people(people_id):
     return jsonify(favorites_people.to_dict()), 200
 
 @api.route('/favorite/people/<int:people_id>', methods= ['DELETE']) #Elimina un personaje de la tabla favorites_characters.
-def delete_favorite_people(people_id):                              #No confundir con el campo people_id,
-                                                             #Se pasa es campo ID de la tabla favorites_characters.
-    people= Favorite_People.query.get(people_id)
+def delete_favorite_people(people_id, user_id):                              #No confundir con el campo people_id,
+    people= People.query.get(people_id)
+    user= User.query.get(user_id)
+    
 
     if not people:
         return jsonify({"messagge": "Favorite people doesn't exist!"}), 404
     
-    db.session.delete(people)
+    db.session.delete(people, user)
     db.session.commit()
 
     return jsonify({"messagge": "Favorite People was deleted!"}), 200
