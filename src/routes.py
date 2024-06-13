@@ -1,7 +1,7 @@
 from flask import Blueprint, request, jsonify
 api = Blueprint('api', __name__)
 
-from models import db, People, Favorite_People, Planet, Favorite_Planet, User 
+from models import db, favorite_planet, favorite_people, People, Planet, User 
 
 #OPERACIONES DE CHARACTERS
 
@@ -11,7 +11,7 @@ def get_characters():
     characters= list(map(lambda characters: characters.to_dict(), characters))
     return jsonify(characters), 200
 
-@api.route('/people/<int:people_id>', methods=['GET']) #Muestra un solo personaje
+@api.route('/people/<int:people_id>', methods=['GET']) #Muestra un solo personaje en un objeto
 def get_people(people_id):
     people= People.query.filter_by(id= people_id).first()
     result= people.to_dict()
@@ -29,24 +29,30 @@ def add_characters():
     print(name)
     print(url)
 
+    #A continuaciónd preparación del Insert
     people= People()
     people.name= name
     people.url= url
 
+    #A continuación ejecuta el query (el insert de agregar un personaje a la base de datos)
     db.session.add(people)
+    #Guarda los cambios en la tabla de la base de datos 
     db.session.commit()
 
     return jsonify(people.to_dict()), 201
 
 @api.route('/favorite/people/<int:people_id>', methods=['POST']) #Agrega un personaje a un usuario del blog
 def add_favorite_people(people_id):
- 
+    
+    #A continuación preparación del Insert
     user_id= 1
-    favorites_people= Favorite_People()  
+    favorites_people= favorite_people()  
     favorites_people.user_id= user_id
     favorites_people.people_id= people_id
 
-    db.session.add(favorites_people) 
+    #Agrega el personaje favorito agregado por el usuario
+    db.session.add(favorites_people)
+    #Guarda el personaje favorito por los ids asociados 
     db.session.commit()
     return jsonify(favorites_people.to_dict()), 200
 
@@ -89,20 +95,24 @@ def add_planets():
     print(name)
     print(url)
 
+    #A continuación preparación del Insert
     planet= Planet()
     planet.name= name
     planet.url= url
 
+    #A continuación ejecuta el query (el insert de agregar un planeta a la base de datos)
     db.session.add(planet)
+    #Guarda los cambios en la tabla de la base de datos
     db.session.commit()
 
     return jsonify(planet.to_dict()), 201
 
 @api.route('/favorite/planet/<int:planet_id>', methods=['POST']) #Agrega un planeta a un usaurio del blog
 def add_favorite_planet(planet_id):
- 
+    
+    #A contnuación preparación del insert
     user_id= 1
-    favorites_planets= Favorite_Planet()  
+    favorites_planets= favorite_planet()  
     favorites_planets.user_id= user_id
     favorites_planets.planet_id= planet_id
 
@@ -114,7 +124,7 @@ def add_favorite_planet(planet_id):
 @api.route('/favorite/planet/<int:planet_id>', methods= ['DELETE']) #No confundir con el campo planet_id,
 def delete_favorite_planet(planet_id):                              #se pasa es el campo id de la tabla favorites_planets.
 
-    planet= Favorite_Planet.query.get(planet_id)
+    planet= favorite_planet.query.get(planet_id)
 
     if not planet:
         return jsonify({"messagge": "Favorite planet doesn't exist!"}), 404
@@ -130,8 +140,8 @@ def delete_favorite_planet(planet_id):                              #se pasa es 
 
 @api.route('/users', methods=['GET'])
 def get_users():
-    users= User.query.all()
-    users= list(map(lambda users: users.to_dict(), users))
+    users= User.query.all() #Consulta a todos los usuarios del blog en la base de datos.
+    users= list(map(lambda users: users.to_dict(), users)) #Lista todo los usuarios.
     return jsonify(users), 200
 
 @api.route('/users/<username>/favorites', methods=['GET'])
@@ -143,8 +153,8 @@ def get_favorites_users(username):
 @api.route('/user/favorites', methods=['GET'])
 def user_favorites():
     user_id= 1
-    favorites_planets= Favorite_Planet.query.filter_by(user_id= user_id)
-    favorites_characters= Favorite_People.query.filter_by(user_id= user_id)
+    favorites_planets= favorite_planet.query.filter_by(user_id= user_id)
+    favorites_characters= favorite_people.query.filter_by(user_id= user_id)
     results_planets= favorites_planets.to_dict()
     results_characters= favorites_characters.to_dict()
 
