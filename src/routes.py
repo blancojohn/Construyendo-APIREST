@@ -1,14 +1,14 @@
 from flask import Blueprint, request, jsonify
 api = Blueprint('api', __name__)
 
-from models import db, favorite_planet, favorite_people, People, Planet, User 
+from models import db, Favorite_Planet, Favorite_People, People, Planet, User 
 
 #OPERACIONES DE CHARACTERS
 
 @api.route('/people', methods=['GET']) #Lista todos los personajes
 def get_characters():
     characters= People.query.all()
-    characters= list(map(lambda characters: characters.to_dict(), characters))
+    characters= list(map(lambda people: people.to_dict(), characters))
     return jsonify(characters), 200
 
 @api.route('/people/<int:people_id>', methods=['GET']) #Muestra un solo personaje en un objeto
@@ -20,12 +20,10 @@ def get_people(people_id):
 
 @api.route('/people', methods=['POST']) #Crea un personaje
 def add_characters():
-    datos = request.get_json()
-    print(datos['name'])
-    print(datos['url'])
-    
+    #Accede por cada campo de la clase People.
     name = request.json.get('name')
     url = request.json.get('url')
+    #Muestra los datos recibe por el POST.
     print(name)
     print(url)
 
@@ -46,7 +44,7 @@ def add_favorite_people(people_id):
     
     #A continuación preparación del Insert
     user_id= 1
-    favorites_people= favorite_people()  
+    favorites_people= Favorite_People()  
     favorites_people.user_id= user_id
     favorites_people.people_id= people_id
 
@@ -75,7 +73,7 @@ def delete_favorite_people(people_id, user_id):                              #No
 @api.route('/planets', methods=['GET']) #lista todos los planetas
 def get_planets():
     planets= Planet.query.all()
-    planets= list(map(lambda planets: planets.to_dict(), planets))
+    planets= list(map(lambda planet: planet.to_dict(), planets))
     return jsonify(planets), 200
 
 @api.route('/planets/<int:planet_id>', methods=['GET']) #Muestra un solo planeta
@@ -86,19 +84,16 @@ def get_planet(planet_id):
 
 @api.route('/planet', methods=['POST']) #Crea un planeta
 def add_planets():
+    #Accede globalmente a los campos asociados a la clase Planet.
     datos = request.get_json()
+    #Estos print muestran los datos recibidos por el POST.
     print(datos['name'])
     print(datos['url'])
     
-    name = request.json.get('name')
-    url = request.json.get('url')
-    print(name)
-    print(url)
-
-    #A continuación preparación del Insert
+    #A continuación preparación del Insert 
     planet= Planet()
-    planet.name= name
-    planet.url= url
+    planet.name= datos['name']
+    planet.url= datos['url']
 
     #A continuación ejecuta el query (el insert de agregar un planeta a la base de datos)
     db.session.add(planet)
@@ -112,7 +107,7 @@ def add_favorite_planet(planet_id):
     
     #A contnuación preparación del insert
     user_id= 1
-    favorites_planets= favorite_planet()  
+    favorites_planets= Favorite_Planet()  
     favorites_planets.user_id= user_id
     favorites_planets.planet_id= planet_id
 
@@ -124,7 +119,7 @@ def add_favorite_planet(planet_id):
 @api.route('/favorite/planet/<int:planet_id>', methods= ['DELETE']) #No confundir con el campo planet_id,
 def delete_favorite_planet(planet_id):                              #se pasa es el campo id de la tabla favorites_planets.
 
-    planet= favorite_planet.query.get(planet_id)
+    planet= Favorite_Planet.query.get(planet_id)
 
     if not planet:
         return jsonify({"messagge": "Favorite planet doesn't exist!"}), 404
@@ -141,7 +136,7 @@ def delete_favorite_planet(planet_id):                              #se pasa es 
 @api.route('/users', methods=['GET'])
 def get_users():
     users= User.query.all() #Consulta a todos los usuarios del blog en la base de datos.
-    users= list(map(lambda users: users.to_dict(), users)) #Lista todo los usuarios.
+    users= list(map(lambda user: user.to_dict(), users)) #Lista todo los usuarios.
     return jsonify(users), 200
 
 @api.route('/users/<username>/favorites', methods=['GET'])
@@ -153,9 +148,10 @@ def get_favorites_users(username):
 @api.route('/user/favorites', methods=['GET'])
 def user_favorites():
     user_id= 1
-    favorites_planets= favorite_planet.query.filter_by(user_id= user_id)
-    favorites_characters= favorite_people.query.filter_by(user_id= user_id)
-    results_planets= favorites_planets.to_dict()
-    results_characters= favorites_characters.to_dict()
+    favorites_characters= Favorite_People.query.all()
+    favorites_planets= Favorite_Planet.query.all()
 
-    return jsonify(results_planets, results_characters), 200
+    results_characters= list(map(lambda people: people.to_dict(), favorites_characters))
+    results_planets= list(map(lambda planet: planet.to_dict(), favorites_planets))
+
+    return jsonify(results_characters, results_planets), 200
